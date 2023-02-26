@@ -1,12 +1,12 @@
 const router = require("express").Router();
 const { Category, Product } = require("../../models");
-
 // The `/api/categories` endpoint
 
 router.get("/", async (req, res) => {
   // find all categories
-  const data = Category.findAll();
-  include: [Product];
+  const data = await Category.findAll({
+    include: [Product],
+  });
   // be sure to include its associated Products
   return res.status(200).json(data);
 });
@@ -27,8 +27,7 @@ router.post("/", async (req, res) => {
     const data = await Category.create(req.body);
     return res.status(200).json(data);
   } catch (err) {
-    console.log(err);
-    return res.status(500).json(err);
+    return res.json(err);
   }
 });
 
@@ -49,5 +48,3 @@ router.delete("/:id", async (req, res) => {
 });
 
 module.exports = router;
-
-// one to many relationship table for products and categories

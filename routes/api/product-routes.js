@@ -6,29 +6,33 @@ const { Product, Category, Tag, ProductTag } = require("../../models");
 // get all products
 router.get("/", async (req, res) => {
   // find all products
-  const data = await Product.findAll();
-  // be sure to include its associated Category and Tag data
-
-  return res.status(200).json(data);
+  try {
+    const data = await Product.findAll({
+      include: [Category, { model: Tag, through: ProductTag }],
+    });
+    // be sure to include its associated Category and Tag data
+    return res.status(200).json(data);
+  } catch (err) {
+    res.status(400).json(err);
+  }
 });
 
 // get one product
 router.get("/:id", async (req, res) => {
   // find a single product by its `id`
   const data = await Product.findOne({
-    where: { id: req.params.id },
-    include: [Category, Tag],
+    where: {
+      id: req.params.id,
+    },
+    // be sure to include its associated Category and Tag data
+    include: [Category, { model: Tag, through: ProductTag }],
   });
-  return res.status(200).json(data);
-  // be sure to include its associated Category and Tag data
+  res.status(200).json(data);
 });
 
 // create new product
 router.post("/", (req, res) => {
-  console.log(req.body);
-
   /* req.body should look like this...
-  
     {
       product_name: "Basketball",
       price: 200.00,
@@ -88,7 +92,7 @@ router.put("/:id", (req, res) => {
       // run both actions
       return Promise.all([ProductTag.destroy({ where: { id: productTagsToRemove } }), ProductTag.bulkCreate(newProductTags)]);
     })
-    .then((updatedProductTags) => res.json(updatedProductTags))
+    .then((updatedProductTags) => res.status(200).json(updatedProductTags))
     .catch((err) => {
       res.status(400).json(err);
     });
@@ -96,8 +100,9 @@ router.put("/:id", (req, res) => {
 
 router.delete("/:id", async (req, res) => {
   // delete one product by its `id` value
-  const data = await Product.destroy({ where: { id: req.params.id } });
-
+  const data = await Product.destroy({
+    where: { id: req.params.id },
+  });
   return res.status(200).json(data);
 });
 
